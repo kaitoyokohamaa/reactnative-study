@@ -1,222 +1,122 @@
-import React, {useState, useCallback} from 'react'
+// Inspiration: https://dribbble.com/shots/14154226-Rolodex-Scrolling-Animation/attachments/5780833?mode=media
+// Photo by Sharefaith from Pexels
+// Background image: https://www.pexels.com/photo/pink-rose-closeup-photography-1231265/
+
+import * as React from 'react'
 import {
-  StyleSheet,
-  Text,
-  View,
-  TouchableOpacity,
-  Animated,
+  StatusBar,
   FlatList,
   Image,
-  Dimensions
+  Text,
+  View,
+  Dimensions,
+  StyleSheet
 } from 'react-native'
-
+import Animated, {
+  useSharedValue,
+  interpolate,
+  Extrapolate,
+  useAnimatedStyle,
+  useAnimatedScrollHandler
+} from 'react-native-reanimated'
 const {width, height} = Dimensions.get('screen')
+import faker from 'faker'
 
-const bgs = ['#A5BBFF', '#DDBEFE', '#FF63ED', '#B98EFF']
-const DATA = [
-  {
-    key: '3571572',
-    title: 'Multi-lateral intermediate moratorium',
-    description:
-      "I'll back up the multi-byte XSS matrix, that should feed the SCSI application!",
-    image: 'https://image.flaticon.com/icons/png/256/3571/3571572.png'
-  },
-  {
-    key: '3571747',
-    title: 'Automated radical data-warehouse',
-    description:
-      'Use the optical SAS system, then you can navigate the auxiliary alarm!',
-    image: 'https://image.flaticon.com/icons/png/256/3571/3571747.png'
-  },
-  {
-    key: '3571680',
-    title: 'Inverse attitude-oriented system engine',
-    description:
-      'The ADP array is down, compress the online sensor so we can input the HTTP panel!',
-    image: 'https://image.flaticon.com/icons/png/256/3571/3571680.png'
-  },
-  {
-    key: '3571603',
-    title: 'Monitored global data-warehouse',
-    description: 'We need to program the open-source IB interface!',
-    image: 'https://image.flaticon.com/icons/png/256/3571/3571603.png'
+faker.seed(10)
+const DATA = [...Array(30).keys()].map((_, i) => {
+  return {
+    key: faker.random.uuid(),
+    image: `https://randomuser.me/api/portraits/${faker.helpers.randomize([
+      'women',
+      'men'
+    ])}/${faker.random.number(60)}.jpg`,
+    name: faker.name.findName(),
+    jobTitle: faker.name.jobTitle(),
+    email: faker.internet.email()
   }
-]
-
-const Indicator = ({scrollX}) => {
-  return (
-    <View
-      style={{
-        position: 'absolute',
-        bottom: 100,
-        flexDirection: 'row'
-      }}
-    >
-      {DATA.map((_, i) => {
-        const inputRange = [(i - 1) * width, i * width, (i + 1) * width]
-        const scale = scrollX.interpolate({
-          inputRange,
-          outputRange: [0.8, 1.4, 0.8],
-          extrapodate: 'clamp'
-        })
-
-        const opacity = scrollX.interpolate({
-          inputRange,
-          outputRange: [0.4, 0.9, 0.6],
-          extrapodate: 'clamp'
-        })
-        return (
-          <Animated.View
-            key={`indicaton-${i}`}
-            style={{
-              height: 10,
-              width: 10,
-              borderRadius: 5,
-              backgroundColor: '#fff',
-              margin: 10,
-              opacity,
-              transform: [
-                {
-                  scale
-                }
-              ]
-            }}
-          />
-        )
-      })}
-    </View>
-  )
-}
-
-const Backdrop = ({scrollX}) => {
-  const backgroundColor = scrollX.interpolate({
-    inputRange: bgs.map((_, i) => i * width),
-    outputRange: bgs.map(bg => bg)
-  })
-  return (
-    <Animated.View style={[StyleSheet.absoluteFillObject, {backgroundColor}]} />
-  )
-}
-
-const Square = ({scrollX}) => {
-  const YOLO = Animated.modulo(
-    Animated.divide(Animated.modulo(scrollX, width), new Animated.Value(width)),
-    1
-  )
-  const rotate = YOLO.interpolate({
-    inputRange: [0, 0.5, 1],
-    outputRange: ['35deg', '0deg', '35deg']
-  })
-
-  const translateX = YOLO.interpolate({
-    inputRange: [0, 0.5, 1],
-    outputRange: [0, -height, 0]
-  })
-  return (
-    <Animated.View
-      style={{
-        width: height,
-        height: height,
-        backgroundColor: '#fff',
-        borderRadius: 86,
-        position: 'absolute',
-        top: -height * 0.6,
-        left: -height * 0.3,
-        transform: [
-          {
-            rotate
-          },
-          {
-            translateX
-          }
-        ]
-      }}
-    />
-  )
-}
-
+})
+const BG_IMG =
+  'https://www.wallpapertip.com/wmimgs/5-54022_abstract-pastel-background-pastel.jpg'
+const SPACING = 20
+const AVATAR_SIZE = 70
+const ITEM_SIZE = AVATAR_SIZE + SPACING * 3
+const AnimatedFlatList = Animated.createAnimatedComponent(FlatList)
 export default function App() {
-  const scrollX = React.useRef(new Animated.Value(0)).current
-
-  const YOLO = Animated.modulo(
-    Animated.divide(Animated.modulo(scrollX, width), new Animated.Value(width)),
-    1
-  )
-
-  const rotate = YOLO.interpolate({
-    inputRange: [0, 0.5, 1],
-    outputRange: ['0deg', '-35deg', '0deg']
+  const scrollY = useSharedValue(0)
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: e => {
+      scrollY.value = e.contentOffset.y
+    }
   })
 
-  console.log(rotate)
+  const animatedStyles = useAnimatedStyle(() => {
+    const scale = interpolate(
+      0,
+      [-1, 0, ITEM_SIZE * Number(1), ITEM_SIZE * (Number(1) + 2)],
+      [1, 1, 1, 0],
+      Extrapolate.CLAMP
+    )
+    return {
+      transform: [{scale: scale}]
+    }
+  })
   return (
-    <View style={styles.container}>
-      <Backdrop scrollX={scrollX} />
-      <Square scrollX={scrollX} />
-      <Animated.FlatList
+    <View style={{flex: 1, backgroundColor: '#fff'}}>
+      <Image
+        source={{uri: BG_IMG}}
+        style={StyleSheet.absoluteFillObject}
+        blurRadius={80}
+      />
+      <AnimatedFlatList
         data={DATA}
+        onScroll={scrollHandler}
         keyExtractor={item => item.key}
-        contentContainerStyle={{paddingBottom: 100}}
-        scrollEventThrottle={32}
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        onScroll={Animated.event(
-          [{nativeEvent: {contentOffset: {x: scrollX}}}],
-          {useNativeDriver: false}
-        )}
-        renderItem={({item}) => {
+        contentContainerStyle={{
+          padding: SPACING,
+          paddingTop: StatusBar.currentHeight || 42
+        }}
+        renderItem={({item, index}) => {
           return (
-            <View style={{width, alignItems: 'center', padding: 20}}>
-              <View
+            <Animated.View
+              style={[
+                {
+                  flexDirection: 'row',
+                  padding: SPACING,
+                  marginBottom: SPACING,
+                  backgroundColor: 'rgba(255,255,255,0.8)',
+                  borderRadius: 12,
+                  shadowColor: '#000',
+                  shadowOffset: {width: 0, height: 0},
+                  shadowOpacity: 0.3,
+                  shadowRadius: 20
+                },
+                animatedStyles
+              ]}
+            >
+              <Image
+                source={{uri: item.image}}
                 style={{
-                  flex: 0.7,
-                  justifyContent: 'center'
+                  width: AVATAR_SIZE,
+                  height: AVATAR_SIZE,
+                  borderRadius: AVATAR_SIZE,
+                  marginRight: SPACING / 2
                 }}
-              >
-                <Animated.Image
-                  source={{uri: item.image}}
-                  style={{
-                    width: width / 2,
-                    height: height / 2,
-                    resizeMode: 'contain',
-                    transform: [
-                      {
-                        rotate
-                      }
-                    ]
-                  }}
-                />
-              </View>
-              <View style={{flex: 0.3}}>
-                <Text
-                  style={{
-                    fontWeight: '800',
-                    fontSize: 24,
-                    marginBottom: 10,
-                    color: '#fff'
-                  }}
-                >
-                  {item.title}
+              />
+              <View>
+                <Text style={{fontSize: 22, fontWeight: '700'}}>
+                  {item.name}
                 </Text>
-                <Text style={{fontWeight: '300'}}>
-                  {item.description}
+                <Text style={{fontSize: 18, opacity: 0.7}}>
+                  {item.jobTitle}
+                </Text>
+                <Text style={{fontSize: 12, opacity: 0.8, color: '#0099cc'}}>
+                  {item.email}
                 </Text>
               </View>
-            </View>
+            </Animated.View>
           )
         }}
       />
-      <Indicator scrollX={scrollX} />
     </View>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center'
-  }
-})
