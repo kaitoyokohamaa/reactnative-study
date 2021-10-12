@@ -1,8 +1,8 @@
-// Inspiration: https://dribbble.com/shots/14154226-Rolodex-Scrolling-Animation/attachments/5780833?mode=media
+Animated.ScrollView // Inspiration: https://dribbble.com/shots/14154226-Rolodex-Scrolling-Animation/attachments/5780833?mode=media
 // Photo by Sharefaith from Pexels
 // Background image: https://www.pexels.com/photo/pink-rose-closeup-photography-1231265/
 
-import * as React from 'react'
+import React, {useRef} from 'react'
 import {
   StatusBar,
   FlatList,
@@ -17,7 +17,9 @@ import Animated, {
   interpolate,
   Extrapolate,
   useAnimatedStyle,
-  useAnimatedScrollHandler
+  scrollTo,
+  useAnimatedScrollHandler,
+  useAnimatedRef
 } from 'react-native-reanimated'
 
 const {width, height} = Dimensions.get('screen')
@@ -44,26 +46,16 @@ const ITEM_SIZE = AVATAR_SIZE + SPACING * 3
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList)
 export default function App() {
   const scrollY = useSharedValue(0)
-  const scrollHandler = useAnimatedScrollHandler({
+
+  const onScroll = useAnimatedScrollHandler({
+    onEndDrag: () => {
+      scrollY.value = 0
+    },
     onScroll: (e, ctx) => {
       scrollY.value = e.contentOffset.y
     }
   })
-
-  const animatedStyles = [...Array(30).keys()].map((_, i) => {
-    return useAnimatedStyle(() => {
-      const scale = interpolate(
-        scrollY.value,
-        [-1, 0, ITEM_SIZE * Number(i), ITEM_SIZE * (Number(i) + 2)],
-        [1, 1, 1, 0],
-        Extrapolate.CLAMP
-      )
-      return {
-        transform: [{scale: scale}],
-        opacity: scale
-      }
-    })
-  })
+  // 一番近い距離の要素を取得する。
 
   return (
     <View style={{flex: 1, backgroundColor: '#fff'}}>
@@ -72,15 +64,28 @@ export default function App() {
         style={StyleSheet.absoluteFillObject}
         blurRadius={80}
       />
-      <AnimatedFlatList
-        data={DATA}
-        onScroll={scrollHandler}
-        keyExtractor={item => item.key}
-        contentContainerStyle={{
-          padding: SPACING,
-          paddingTop: StatusBar.currentHeight || 42
-        }}
-        renderItem={({item, index}) => {
+      <Animated.ScrollView {...{onScroll}} scrollEventThrottle={1}>
+        {DATA.map((item, i) => {
+          const style = useAnimatedStyle(() => {
+            const scale = interpolate(
+              scrollY.value,
+              [-1, 0, ITEM_SIZE * Number(i), ITEM_SIZE * (Number(i) + 2)],
+              [1, 1, 1, 0],
+              Extrapolate.CLAMP
+            )
+
+            const opacity = interpolate(
+              scrollY.value,
+              [-1, 0, ITEM_SIZE * Number(i), ITEM_SIZE * (Number(i) + 1)],
+              [1, 1, 1, 0],
+              Extrapolate.CLAMP
+            )
+            return {
+              transform: [{scale: scale}],
+              opacity: opacity
+            }
+          })
+
           return (
             <Animated.View
               style={[
@@ -95,7 +100,7 @@ export default function App() {
                   shadowOpacity: 0.3,
                   shadowRadius: 20
                 },
-                animatedStyles
+                style
               ]}
             >
               <Image
@@ -120,8 +125,8 @@ export default function App() {
               </View>
             </Animated.View>
           )
-        }}
-      />
+        })}
+      </Animated.ScrollView>
     </View>
   )
 }
