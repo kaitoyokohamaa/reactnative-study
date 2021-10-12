@@ -19,6 +19,7 @@ import Animated, {
   useAnimatedStyle,
   useAnimatedScrollHandler
 } from 'react-native-reanimated'
+
 const {width, height} = Dimensions.get('screen')
 import faker from 'faker'
 
@@ -44,22 +45,26 @@ const AnimatedFlatList = Animated.createAnimatedComponent(FlatList)
 export default function App() {
   const scrollY = useSharedValue(0)
   const scrollHandler = useAnimatedScrollHandler({
-    onScroll: e => {
+    onScroll: (e, ctx) => {
       scrollY.value = e.contentOffset.y
     }
   })
 
-  const animatedStyles = useAnimatedStyle(() => {
-    const scale = interpolate(
-      0,
-      [-1, 0, ITEM_SIZE * Number(1), ITEM_SIZE * (Number(1) + 2)],
-      [1, 1, 1, 0],
-      Extrapolate.CLAMP
-    )
-    return {
-      transform: [{scale: scale}]
-    }
+  const animatedStyles = [...Array(30).keys()].map((_, i) => {
+    return useAnimatedStyle(() => {
+      const scale = interpolate(
+        scrollY.value,
+        [-1, 0, ITEM_SIZE * Number(i), ITEM_SIZE * (Number(i) + 2)],
+        [1, 1, 1, 0],
+        Extrapolate.CLAMP
+      )
+      return {
+        transform: [{scale: scale}],
+        opacity: scale
+      }
+    })
   })
+
   return (
     <View style={{flex: 1, backgroundColor: '#fff'}}>
       <Image
