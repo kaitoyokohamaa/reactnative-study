@@ -43,7 +43,7 @@ const BG_IMG =
 const SPACING = 20
 const AVATAR_SIZE = 70
 const ITEM_SIZE = AVATAR_SIZE + SPACING * 3
-const AnimatedFlatList = Animated.createAnimatedComponent(FlatList)
+
 export default function App() {
   const scrollY = useSharedValue(0)
 
@@ -55,7 +55,6 @@ export default function App() {
       scrollY.value = e.contentOffset.y
     }
   })
-  // 一番近い距離の要素を取得する。
 
   return (
     <View style={{flex: 1, backgroundColor: '#fff'}}>
