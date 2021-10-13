@@ -10,7 +10,8 @@ import {
   Text,
   View,
   Dimensions,
-  StyleSheet
+  StyleSheet,
+  TouchableHighlight
 } from 'react-native'
 import Animated, {
   useSharedValue,
@@ -55,6 +56,39 @@ export default function App() {
       scrollY.value = e.contentOffset.y
     }
   })
+  // todo:FlatList書き換え
+  // const renderItem = ({item, index}) => {
+  //   const style = useAnimatedStyle(() => {
+  //     const scale = interpolate(
+  //       scrollY.value,
+  //       [-1, 0, ITEM_SIZE * Number(i), ITEM_SIZE * (Number(i) + 2)],
+  //       [1, 1, 1, 0],
+  //       Extrapolate.CLAMP
+  //     )
+
+  //     const opacity = interpolate(
+  //       scrollY.value,
+  //       [-1, 0, ITEM_SIZE * Number(i), ITEM_SIZE * (Number(i) + 1)],
+  //       [1, 1, 1, 0],
+  //       Extrapolate.CLAMP
+  //     )
+
+  //     return {
+  //       transform: [{scale: scale}],
+  //       opacity: opacity
+  //     }
+  //   })
+  // return (
+  //   <TouchableHighlight
+  //     onPress={() => {
+  //       console.log('test')
+  //     }}
+  //   >
+  //     <Text>
+  //       {item.text}
+  //     </Text>
+  //   </TouchableHighlight>
+  // )
 
   return (
     <View style={{flex: 1, backgroundColor: '#fff'}}>
@@ -79,6 +113,7 @@ export default function App() {
               [1, 1, 1, 0],
               Extrapolate.CLAMP
             )
+
             return {
               transform: [{scale: scale}],
               opacity: opacity
